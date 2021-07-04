@@ -1059,7 +1059,25 @@ template <class TVal, class TSizeTy>
 TSizeTy TVec<TVal, TSizeTy>::AddVMerged(const TVec<TVal, TSizeTy>& ValV){
   EAssertR(!(IsShM && (MxVals == -1)), "Cannot write to shared memory");
   AssertR(MxVals!=-1, "This vector was obtained from TVecPool. Such vectors cannot change its size!");
-  for (TSizeTy ValN=0; ValN<ValV.Vals; ValN++){AddMerged(ValV[ValN]);}
+  TVec<TVal> ValV2;
+  for (TSizeTy ValN=0; ValN<ValV.Vals; ValN++){if (!IsInBin(ValV[ValN])) {ValV2.Add(ValV[ValN]);}}
+  ValV2.Merge();
+  TVec<TSizeTy> ValNV; // will insert the unmergable element befored the position marked in ValNV
+  for (TSizeTy ValN2 = 0; ValN2 < ValV2.Len(); ValN2++){
+      for (TSizeTy ValN=0 ; ValN<ValV.Vals; ValN++){if (ValV[ValN] > ValV2[ValN2]){ValNV.Add(ValN); continue;}}
+  }
+  TSizeTy OutValN = ValV2.Len() - ValNV.Len();
+  for (TSizeTy N = 0; N < ValV2.Len() - OutValN; N++){ValV.Add();} // inject bubbles
+  for (TSizeTy N = 0; N < OutValN; N++){ValV.Add(ValV2[ValNV.Len()+N]);} // append the greatest values
+
+  TSizeTy EndValN = ValV.Len(); // plan to move elements within [ValN, EndValN)
+  // move backward and insert
+  for (TSizeTy ValN2 = ValNV.Len()-1; ValN2 >= 0; ValN2--) {
+      const TSizeTy & BegValN = ValNV[ValN2];
+      const TSizeTy OffSet = ValN2+1;
+      for (; EndValN >= BegValN; EndValN--){ValV[EndValN+OffSet] = ValV[EndValN];}
+      ValV[EndValN+OffSet] = ValV2[ValN2];
+  }
   return Len();
 }
 
