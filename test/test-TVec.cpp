@@ -6,7 +6,7 @@ using namespace std;
 
 template<class TVal>
 bool TestTVecEqual(const TVec<TVal>& V1, const TVec<TVal>& V2);
-
+void TestNewMethodEfficiency();
 
 TEST(TVecTest, TIntVMergeV) {
 
@@ -68,6 +68,8 @@ TEST(TVecTest, TIntVMergeV) {
     V3.Clr();
     V1.AddVMerged(V3);
     EXPECT_TRUE(TestTVecEqual<TInt>(V2, V3));
+
+    TestNewMethodEfficiency();
 }
 
 template<class TVal>
@@ -85,8 +87,8 @@ bool TestTVecEqual(const TVec<TVal>& V1, const TVec<TVal>& V2){
 #include <chrono>
 void TestNewMethodEfficiency(){
     const int Len1 = 10240;
-    const int Len2 = 10240;
-    const int Round = 1024;
+    const int Len2 = 1024;
+    const int Round = 128;
     TIntV V1;
     TIntV V2;
     double old_method_seconds = 0.0;
